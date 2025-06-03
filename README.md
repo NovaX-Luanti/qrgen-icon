@@ -12,10 +12,6 @@
 - Export to PNG (4096x4096 resolution)
 - 100% client-side – no server required
 
-## 🖼️ Screenshot
-
-![Screenshot](screenshot.png) <!-- Add your own screenshot -->
-
 ## 🛠️ Built With
 
 - HTML5 + CSS3
