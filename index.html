@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Code Generator with Icon</title>
+
+  <!-- Font Awesome (no integrity to avoid CORS issues) -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0 }
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --bg-start: #eef2f7;
+      --bg-end: #e0e7ff;
+      --radius-xl: 20px;
+    }
+
+    body {
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 2rem 1rem 3rem;
+    }
+    h1 {
+      font-size: clamp(1.5rem, 2.5vw + 1rem, 2rem);
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      text-align: center;
+    }
+    form {
+      width: 100%;
+      max-width: 420px;
+      background: #ffffffdd;
+      backdrop-filter: blur(6px);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: .9rem;
+      box-shadow: 0 6px 26px rgba(0, 0, 0, .08);
+    }
+
+    input[type=text] {
+      padding: .75rem 1rem;
+      border: 1px solid #c7d2fe;
+      border-radius: 14px;
+      font-size: 1rem;
+      outline: none;
+      width: 100%;
+      transition: border-color .2s;
+    }
+    input[type=text]:focus { border-color: var(--primary); }
+
+    .file-wrapper { position: relative; width: 100%; height: 52px; }
+    .file-wrapper input[type=file] {
+      opacity: 0;
+      width: 100%;
+      height: 52px;
+      cursor: pointer;
+    }
+    .file-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: 0 1rem;
+      background: #eef2ff;
+      border: 1px dashed #a5b4fc;
+      border-radius: 14px;
+      font-size: .95rem;
+      color: #374151;
+      pointer-events: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .btn {
+      padding: .8rem 1rem;
+      border: none;
+      border-radius: 16px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      width: 100%;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    #qr-container {
+      width: min(90vw, 340px);
+      height: min(90vw, 340px);
+      background: #fff;
+      border-radius: calc(var(--radius-xl) + 2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 22px rgba(0, 0, 0, .07);
+      overflow: hidden;
+    }
+    #qr-container > canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    footer {
+      margin-top: auto;
+      font-size: .8rem;
+      color: #6b7280;
+      text-align: center;
+      padding-bottom: 1rem;
+    }
+
+    @media (min-width: 540px) {
+      .btn {
+        width: auto;
+        align-self: center;
+        padding-inline: 1.6rem;
+      }
+      form { padding: 2rem 2.2rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1><i class="fa-solid fa-qrcode"></i> QR Code Generator with Icon</h1>
+
+  <form id="qrForm">
+    <input type="text" id="qrData" placeholder="Enter URL or text..." required />
+
+    <div class="file-wrapper">
+      <input type="file" id="qrIcon" accept="image/*" />
+      <span class="file-label" id="fileLabel">
+        <i class="fa-solid fa-image"></i> Choose an icon (optional)
+      </span>
+    </div>
+
+    <button class="btn" type="submit">
+      <i class="fa-solid fa-bolt"></i> Generate QR
+    </button>
+  </form>
+
+  <div id="qr-container"></div>
+
+  <button class="btn" id="downloadBtn" disabled>
+    <i class="fa-solid fa-download"></i> Download PNG
+  </button>
+
+  <footer>Made with <i class="fa-solid fa-heart"></i> by Vlad</footer>
+
+  <!-- QR Code Styling v1.5 -->
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+  <script>
+    let qrCode = null;
+
+    const form        = document.getElementById('qrForm');
+    const dataInput   = document.getElementById('qrData');
+    const iconInput   = document.getElementById('qrIcon');
+    const qrContainer = document.getElementById('qr-container');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const fileLabel   = document.getElementById('fileLabel');
+
+    // show selected icon name
+    iconInput.addEventListener('change', () => {
+      fileLabel.textContent = iconInput.files.length
+        ? iconInput.files[0].name
+        : "Choose an icon (optional)";
+    });
+
+    // generate or update QR code
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const data = dataInput.value.trim();
+      const iconFile = iconInput.files[0];
+
+      const baseConfig = {
+        width: 4096,
+        height: 4096,
+        data,
+        dotsOptions: { color: '#000', type: 'rounded' },
+        imageOptions: { crossOrigin: 'anonymous', margin: 80 }
+      };
+
+      if (!qrCode) {
+        qrCode = new QRCodeStyling(baseConfig);
+        qrCode.append(qrContainer);
+      } else {
+        qrCode.update({ data });
+      }
+
+      // handle icon
+      if (iconFile) {
+        const iconUrl = URL.createObjectURL(iconFile);
+        qrCode.update({ image: iconUrl });
+      } else {
+        qrCode.update({ image: undefined });
+      }
+
+      downloadBtn.disabled = false;
+    });
+
+    // download QR PNG
+    downloadBtn.addEventListener('click', () => {
+      if (qrCode) qrCode.download({ name: 'qr-code', extension: 'png' });
+    });
+  </script>
+</body>
+</html>
