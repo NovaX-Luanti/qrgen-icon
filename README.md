@@ -2,7 +2,7 @@
 
 **QRGen Icon** is a simple and responsive web app that allows you to generate high-resolution QR codes (up to 4K) with optional custom icons at the center.
 
-🔗 **Live Demo**: [https://novax-luanti.github.io/qrgen-icon/]
+🔗 **Live Site**: [https://novax-luanti.github.io/qrgen-icon/]
 
 ## 🌟 Features
 
@@ -21,13 +21,13 @@
 
 ## 🧾 Credits
 
-- Developed by **Vlad**
+- Developed by **NovaX**
 - QR rendering: [qr-code-styling](https://github.com/kozakdenys/qr-code-styling)
 - Icons: [Font Awesome](https://fontawesome.com/)
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE.txt)
+This project is licensed under the [MIT License](LICENSE)
 
 You are free to use, modify, and share this project.  
 If you reuse or adapt it, a mention or link back would be appreciated.
